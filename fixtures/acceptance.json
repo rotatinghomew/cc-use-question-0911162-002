@@ -1,0 +1,158 @@
+{
+  "scenario": "全球南方治理参与席位与议程排程中心",
+  "synthetic": true,
+  "records": [
+    {
+      "record_id": "delegate_nomination-001",
+      "payload": {
+        "region_group": "region_group-0",
+        "agenda_priority": 13.9,
+        "nominee_eligibility": 0.47,
+        "availability_window": 17.7,
+        "seat_class": 19.6,
+        "expertise_area": 21.5,
+        "accessibility_need": 0.91,
+        "schedule_conflicts": 25.3,
+        "delegate_capacity": 27.2,
+        "representation_weight": 0.47,
+        "timezone_penalty": 31.0,
+        "participation_debt": 32.9
+      },
+      "state": "submitted",
+      "source": "synthetic-local-acceptance"
+    },
+    {
+      "record_id": "delegate_nomination-002",
+      "payload": {
+        "region_group": "region_group-1",
+        "agenda_priority": 17.6,
+        "nominee_eligibility": 0.58,
+        "availability_window": 21.4,
+        "seat_class": 23.3,
+        "expertise_area": 25.2,
+        "accessibility_need": 0.25,
+        "schedule_conflicts": 29.0,
+        "delegate_capacity": 30.9,
+        "representation_weight": 0.58,
+        "timezone_penalty": 34.7,
+        "participation_debt": 36.6
+      },
+      "state": "submitted",
+      "source": "synthetic-local-acceptance"
+    },
+    {
+      "record_id": "delegate_nomination-003",
+      "payload": {
+        "region_group": "region_group-2",
+        "agenda_priority": 21.3,
+        "nominee_eligibility": 0.69,
+        "availability_window": 25.1,
+        "seat_class": 27.0,
+        "expertise_area": 28.9,
+        "accessibility_need": 0.36,
+        "schedule_conflicts": 32.7,
+        "delegate_capacity": 34.6,
+        "representation_weight": 0.69,
+        "timezone_penalty": 38.4,
+        "participation_debt": 40.3
+      },
+      "state": "submitted",
+      "source": "synthetic-local-acceptance"
+    },
+    {
+      "record_id": "delegate_nomination-004",
+      "payload": {
+        "region_group": "region_group-3",
+        "agenda_priority": 25.0,
+        "nominee_eligibility": 0.8,
+        "availability_window": 28.8,
+        "seat_class": 30.7,
+        "expertise_area": 32.6,
+        "accessibility_need": 0.47,
+        "schedule_conflicts": 36.4,
+        "delegate_capacity": 38.3,
+        "representation_weight": 0.8,
+        "timezone_penalty": 42.1,
+        "participation_debt": 44.0
+      },
+      "state": "submitted",
+      "source": "synthetic-local-acceptance"
+    },
+    {
+      "record_id": "delegate_nomination-005",
+      "payload": {
+        "region_group": "region_group-4",
+        "agenda_priority": 28.7,
+        "nominee_eligibility": 0.91,
+        "availability_window": 32.5,
+        "seat_class": 34.4,
+        "expertise_area": 36.3,
+        "accessibility_need": 0.58,
+        "schedule_conflicts": 40.1,
+        "delegate_capacity": 42.0,
+        "representation_weight": 0.91,
+        "timezone_penalty": 45.8,
+        "participation_debt": 47.7
+      },
+      "state": "submitted",
+      "source": "synthetic-local-acceptance"
+    },
+    {
+      "record_id": "delegate_nomination-006",
+      "payload": {
+        "region_group": "region_group-0",
+        "agenda_priority": 32.4,
+        "nominee_eligibility": 0.25,
+        "availability_window": 36.2,
+        "seat_class": 38.1,
+        "expertise_area": 40.0,
+        "accessibility_need": 0.69,
+        "schedule_conflicts": 43.8,
+        "delegate_capacity": 45.7,
+        "representation_weight": 0.25,
+        "timezone_penalty": 49.5,
+        "participation_debt": 51.4
+      },
+      "state": "submitted",
+      "source": "synthetic-local-acceptance"
+    },
+    {
+      "record_id": "delegate_nomination-007",
+      "payload": {
+        "region_group": "region_group-1",
+        "agenda_priority": 36.1,
+        "nominee_eligibility": 0.36,
+        "availability_window": 39.9,
+        "seat_class": 41.8,
+        "expertise_area": 43.7,
+        "accessibility_need": 0.8,
+        "schedule_conflicts": 47.5,
+        "delegate_capacity": 49.4,
+        "representation_weight": 0.36,
+        "timezone_penalty": 53.2,
+        "participation_debt": 55.1
+      },
+      "state": "submitted",
+      "source": "synthetic-local-acceptance"
+    },
+    {
+      "record_id": "delegate_nomination-008",
+      "payload": {
+        "region_group": "region_group-2",
+        "agenda_priority": 39.8,
+        "nominee_eligibility": 0.47,
+        "availability_window": 43.6,
+        "seat_class": 45.5,
+        "expertise_area": 47.4,
+        "accessibility_need": 0.91,
+        "schedule_conflicts": 51.2,
+        "delegate_capacity": 53.1,
+        "representation_weight": 0.47,
+        "timezone_penalty": 56.9,
+        "participation_debt": 58.8
+      },
+      "state": "submitted",
+      "source": "synthetic-local-acceptance"
+    }
+  ]
+}
