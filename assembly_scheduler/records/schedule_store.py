@@ -60,9 +60,35 @@ CREATE TABLE IF NOT EXISTS runs(
     started_at TEXT NOT NULL,
     finished_at TEXT
 );
+CREATE TABLE IF NOT EXISTS confirmations(
+    confirmation_id TEXT PRIMARY KEY,
+    record_id TEXT NOT NULL,
+    outcome TEXT NOT NULL,
+    reason TEXT NOT NULL,
+    record_version INTEGER NOT NULL,
+    confirmation_json TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY(record_id) REFERENCES records(record_id)
+);
+CREATE TABLE IF NOT EXISTS seat_plans(
+    plan_version INTEGER PRIMARY KEY,
+    quota INTEGER NOT NULL,
+    plan_hash TEXT NOT NULL,
+    plan_json TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS plan_diffs(
+    diff_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    previous_version INTEGER NOT NULL,
+    next_version INTEGER NOT NULL,
+    trigger TEXT NOT NULL,
+    diff_json TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
 CREATE INDEX IF NOT EXISTS idx_records_state ON records(state, updated_at);
 CREATE INDEX IF NOT EXISTS idx_events_aggregate ON events(aggregate_id, event_id);
 CREATE INDEX IF NOT EXISTS idx_decisions_record ON decisions(record_id, decided_at);
+CREATE INDEX IF NOT EXISTS idx_confirmations_record ON confirmations(record_id, created_at);
 """
 
 
@@ -213,6 +239,14 @@ class Repository:
                 raise ContractError("unknown run")
             self.append_event(connection, "run.finished", run_id, 1, dict(result))
 
+    def refresh_run(self, run_id: str, result: Mapping[str, Any]) -> None:
+        """Update a finished run's cached result without emitting a new run event."""
+        with self.transaction() as connection:
+            changed = connection.execute("UPDATE runs SET result_json=? WHERE run_id=?",
+                                         (canonical_json(result), run_id)).rowcount
+            if changed != 1:
+                raise ContractError("unknown run")
+
     def verify_chain(self) -> list[str]:
         errors: list[str] = []
         previous = "0" * 64
@@ -233,9 +267,76 @@ class Repository:
     def snapshot(self) -> dict[str, Any]:
         with self.connect() as connection:
             counts = {table: connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
-                      for table in ("records", "record_versions", "decisions", "events", "runs")}
+                      for table in ("records", "record_versions", "decisions", "events", "runs",
+                                    "confirmations", "seat_plans", "plan_diffs")}
             states = {row[0]: row[1] for row in connection.execute("SELECT state,COUNT(*) FROM records GROUP BY state")}
         return {"counts": counts, "states": states, "chain_errors": self.verify_chain()}
+
+    def save_confirmation(self, confirmation: Any, record: DomainRecord) -> str:
+        with self.transaction() as connection:
+            if not connection.execute("SELECT 1 FROM records WHERE record_id=?", (confirmation.record_id,)).fetchone():
+                raise ContractError("confirmation record does not exist")
+            body = canonical_json(confirmation.as_dict())
+            connection.execute(
+                "INSERT OR IGNORE INTO confirmations(confirmation_id,record_id,outcome,reason,record_version,confirmation_json,created_at) VALUES(?,?,?,?,?,?,?)",
+                (confirmation.confirmation_id, confirmation.record_id, confirmation.outcome,
+                 confirmation.reason, confirmation.record_version, body, confirmation.created_at),
+            )
+            self.append_event(connection, "confirmation.saved", confirmation.record_id,
+                              self.event_count(confirmation.record_id, connection) + 1,
+                              {"confirmation_id": confirmation.confirmation_id,
+                               "outcome": confirmation.outcome, "record_version": record.version})
+        return confirmation.confirmation_id
+
+    def list_confirmations(self) -> list[dict[str, Any]]:
+        with self.connect() as connection:
+            rows = connection.execute(
+                "SELECT confirmation_json FROM confirmations ORDER BY record_id, created_at"
+            ).fetchall()
+        return [json.loads(row[0]) for row in rows]
+
+    def latest_confirmation(self, record_id: str) -> dict[str, Any] | None:
+        with self.connect() as connection:
+            row = connection.execute(
+                "SELECT confirmation_json FROM confirmations WHERE record_id=? ORDER BY created_at DESC, rowid DESC LIMIT 1",
+                (record_id,),
+            ).fetchone()
+        return json.loads(row[0]) if row else None
+
+    def save_seat_plan(self, plan: Any) -> None:
+        with self.transaction() as connection:
+            body = canonical_json(plan.as_dict())
+            connection.execute(
+                "INSERT OR REPLACE INTO seat_plans(plan_version,quota,plan_hash,plan_json,created_at) VALUES(?,?,?,?,?)",
+                (plan.version, plan.quota, plan.plan_hash, body, utc_now()),
+            )
+            self.append_event(connection, "seat_plan.saved", "seat-plan", plan.version,
+                              {"plan_hash": plan.plan_hash, "quota": plan.quota,
+                               "seats": list(plan.seated_record_ids)})
+
+    def latest_seat_plan(self) -> dict[str, Any] | None:
+        with self.connect() as connection:
+            row = connection.execute(
+                "SELECT plan_json FROM seat_plans ORDER BY plan_version DESC LIMIT 1"
+            ).fetchone()
+        return json.loads(row[0]) if row else None
+
+    def save_plan_diff(self, diff: Any, trigger: str) -> None:
+        with self.transaction() as connection:
+            connection.execute(
+                "INSERT INTO plan_diffs(previous_version,next_version,trigger,diff_json,created_at) VALUES(?,?,?,?,?)",
+                (diff.previous_version, diff.next_version, trigger,
+                 canonical_json(diff.as_dict()), utc_now()),
+            )
+            self.append_event(connection, "seat_plan.revised", "seat-plan", diff.next_version,
+                              {"trigger": trigger, "diff": diff.as_dict()})
+
+    def plan_diff_rows(self) -> list[dict[str, Any]]:
+        with self.connect() as connection:
+            rows = connection.execute(
+                "SELECT diff_json FROM plan_diffs ORDER BY diff_id"
+            ).fetchall()
+        return [json.loads(row[0]) for row in rows]
 
     def decision_rows(self) -> list[dict[str, Any]]:
         with self.connect() as connection:
